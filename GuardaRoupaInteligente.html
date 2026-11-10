@@ -18,12 +18,12 @@
     --text:     #754054;
     --text-soft:#a47d8b;
     --danger:   #d46b88;
+    --success:  #2e8b57;
     --radius:   14px;
     --shadow:   0 2px 10px rgba(217, 130, 163, .12);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   html { -webkit-text-size-adjust: 100%; }
 
   body {
@@ -153,10 +153,7 @@
     margin: 6px 0 15px;
     flex-wrap: wrap;
   }
-  #count {
-    font-size: 13px;
-    color: var(--text-soft);
-  }
+  #count { font-size: 13px; color: var(--text-soft); }
 
   /* ===== GRID DE ROUPAS ===== */
   #clothes {
@@ -171,7 +168,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: box-shadow .18s ease, transform .18s ease;
+    transition: box-shadow .18s ease;
     position: relative;
   }
   .clothing:hover { box-shadow: var(--shadow); }
@@ -224,16 +221,9 @@
     align-self: flex-start;
     margin-bottom: 4px;
   }
-  .clothing-info .actions {
-    display: flex;
-    gap: 6px;
-    margin-top: auto;
-  }
-  .clothing-info .actions button {
-    flex: 1;
-    padding: 9px;
-    font-size: 12px;
-  }
+  .clothing-info .actions { display: flex; gap: 6px; margin-top: auto; }
+  .clothing-info .actions button { flex: 1; padding: 9px; font-size: 12px; }
+
   .delete {
     color: var(--danger);
     background: transparent;
@@ -243,7 +233,6 @@
     font-weight: 600;
   }
   .delete:hover { background: #fdeaf0; }
-
   .full { width: 100%; }
 
   /* ===== FORMULÁRIO ===== */
@@ -284,11 +273,9 @@
     border-radius: 10px;
     background: white;
     color: var(--text);
-    font-size: 16px; /* evita zoom no iOS */
+    font-size: 16px;
   }
-  input[type="text"]:focus, select:focus {
-    border-color: var(--pink-500);
-  }
+  input[type="text"]:focus, select:focus { border-color: var(--pink-500); }
 
   .photo-buttons {
     display: grid;
@@ -344,11 +331,7 @@
     gap: 12px;
   }
   .look-item { text-align: center; }
-  .look-item h3 {
-    font-size: 13px;
-    margin-bottom: 7px;
-    color: var(--pink-700);
-  }
+  .look-item h3 { font-size: 13px; margin-bottom: 7px; color: var(--pink-700); }
   .lookslot {
     background: white;
     border: 2px dashed var(--pink-400);
@@ -359,18 +342,11 @@
     align-items: center;
     font-size: 40px;
     overflow: hidden;
-    transition: border-color .18s ease, background .18s ease;
+    transition: border-color .18s ease;
     position: relative;
   }
-  .lookslot.filled {
-    border-style: solid;
-    border-color: var(--pink-500);
-  }
-  .lookslot img {
-    width: 100%;
-    height: 125px;
-    object-fit: cover;
-  }
+  .lookslot.filled { border-style: solid; border-color: var(--pink-500); }
+  .lookslot img { width: 100%; height: 125px; object-fit: cover; }
   .lookslot .remove-slot {
     position: absolute;
     top: 4px; right: 4px;
@@ -385,11 +361,7 @@
     box-shadow: 0 1px 4px rgba(0,0,0,.15);
   }
 
-  .look-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 16px;
-  }
+  .look-buttons { display: flex; gap: 8px; margin-top: 16px; }
   .look-buttons button { flex: 1; }
 
   /* ===== LOOKS SALVOS ===== */
@@ -403,7 +375,6 @@
     border: 1px solid var(--pink-300);
     padding: 10px;
     border-radius: 12px;
-    position: relative;
   }
   .saved-images {
     display: grid;
@@ -418,15 +389,8 @@
     border-radius: 6px;
     background: var(--pink-100);
   }
-  .saved-card h3 {
-    font-size: 13px;
-    margin-bottom: 8px;
-    color: var(--pink-700);
-  }
-  .saved-card .delete {
-    width: 100%;
-    background: var(--pink-100);
-  }
+  .saved-card h3 { font-size: 13px; margin-bottom: 8px; color: var(--pink-700); }
+  .saved-card .delete { width: 100%; background: var(--pink-100); }
 
   .empty {
     text-align: center;
@@ -444,7 +408,8 @@
     color: var(--text-soft);
     min-height: 18px;
   }
-  .message.ok { color: #2e8b57; font-weight: 600; }
+  .message.ok    { color: var(--success); font-weight: 600; }
+  .message.error { color: var(--danger);  font-weight: 600; }
 
   /* ===== TOAST ===== */
   #toast {
@@ -551,7 +516,7 @@
     </button>
   </div>
 
-  <div id="clothes" aria-live="polite"></div>
+  <div id="clothes"></div>
 </section>
 
 <!-- ===== MONTAGEM DE LOOK ===== -->
@@ -594,7 +559,7 @@
 <section aria-labelledby="h-saved">
   <h2 id="h-saved">Meus looks salvos ♡</h2>
   <p class="subtitle">Seus conjuntos favoritos ficam guardados aqui.</p>
-  <div id="savedLooks" aria-live="polite"></div>
+  <div id="savedLooks"></div>
 </section>
 
 <div id="toast" role="status" aria-live="polite"></div>
@@ -604,106 +569,174 @@
   "use strict";
 
   /* ============================================================
-     ESTADO + PERSISTÊNCIA
+     CONSTANTES
      ============================================================ */
-  const STORAGE_KEY = "guardaRoupa.v2";
-  const MAX_PIECES = 200;
-  const MAX_FILE_MB = 8;
-  const MAX_IMG_SIDE = 800;
+  const STORAGE_KEY   = "guardaRoupa.v2";
+  const MAX_PIECES    = 120;
+  const MAX_FILE_MB   = 8;
+  const MAX_IMG_SIDE  = 600;
+  const IMG_QUALITY   = 0.72;
 
+  const LOOK_SLOTS  = ["Vestidos", "Camisas", "bottom", "Tênis"];
+  const SLOT_EMOJI  = { Camisas: "👚", bottom: "👖", Tênis: "👟", Vestidos: "👗" };
+
+  /* ============================================================
+     ESTADO
+     ============================================================ */
   const state = {
     clothes: [],
-    selected: {},
-    savedLooks: [],
+    selected: {},        // { slot -> pieceId }
+    savedLooks: [],      // [{ id, pieces: [piece,...] }]
     currentCategory: "Todos",
     pendingPhoto: ""
   };
 
   const $ = id => document.getElementById(id);
 
-  const CATEGORIES = ["Shorts","Camisas","Tênis","Vestidos","Calças","Saias"];
-  const SLOT_EMOJI = { Camisas:"👚", bottom:"👖", Tênis:"👟", Vestidos:"👗" };
-  const LOOK_ORDER = ["Vestidos","Camisas","bottom","Tênis"];
+  /* ============================================================
+     HELPERS
+     ============================================================ */
+  const escapeHTML = text => String(text).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[c]);
 
-  /* ---------- Persistência ---------- */
+  const uid = () =>
+    (typeof crypto !== "undefined" && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+
+  const slotFor = cat => {
+    if (cat === "Camisas")  return "Camisas";
+    if (cat === "Tênis")    return "Tênis";
+    if (cat === "Vestidos") return "Vestidos";
+    return "bottom";
+  };
+
+  const vibrate = (ms = 8) => {
+    try { navigator.vibrate?.(ms); } catch { /* ignore */ }
+  };
+
+  /* ============================================================
+     PERSISTÊNCIA (com rollback seguro)
+     ============================================================ */
   function save() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         clothes: state.clothes,
         savedLooks: state.savedLooks
       }));
+      return true;
     } catch (e) {
-      console.warn("Não foi possível salvar:", e);
-      toast("Armazenamento cheio. Remova peças antigas.", "error");
+      console.warn("Falha ao salvar:", e);
+      return false;
     }
   }
+
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const data = JSON.parse(raw);
+
       if (Array.isArray(data.clothes)) state.clothes = data.clothes;
-      if (Array.isArray(data.savedLooks)) state.savedLooks = data.savedLooks;
-    } catch (e) { console.warn("Falha ao carregar dados:", e); }
+
+      if (Array.isArray(data.savedLooks)) {
+        // Migração: looks antigos eram arrays simples
+        state.savedLooks = data.savedLooks.map(l =>
+          Array.isArray(l) ? { id: uid(), pieces: l } : l
+        );
+      }
+    } catch (e) {
+      console.warn("Falha ao carregar dados:", e);
+    }
   }
 
-  /* ---------- Helpers ---------- */
-  const escapeHTML = text => String(text).replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  })[c]);
-
-  const uid = () => (crypto?.randomUUID?.() ??
-    "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2));
-
-  const slotFor = cat =>
-    cat === "Camisas" ? "Camisas" :
-    cat === "Tênis"   ? "Tênis" :
-    cat === "Vestidos" ? "Vestidos" : "bottom";
-
-  /* ---------- Toast ---------- */
+  /* ============================================================
+     TOAST
+     ============================================================ */
   let toastTimer;
   function toast(msg, type = "ok") {
     const el = $("toast");
     el.textContent = msg;
     el.className = "show" + (type === "error" ? " error" : "");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.className = "", 2600);
+    toastTimer = setTimeout(() => { el.className = ""; }, 2600);
   }
 
   /* ============================================================
-     REDIMENSIONAR IMAGEM (economiza localStorage)
+     IMAGEM: carregar + redimensionar (com orientação EXIF)
      ============================================================ */
-  function resizeImage(file, maxSide = MAX_IMG_SIDE, quality = 0.82) {
-    return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const { width, height } = img;
-        const scale = Math.min(1, maxSide / Math.max(width, height));
-        const w = Math.round(width * scale);
-        const h = Math.round(height * scale);
-        const canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", quality));
+  async function loadImageSource(file) {
+    // Preferência: createImageBitmap (respeita EXIF em todos navegadores modernos)
+    if (typeof createImageBitmap === "function") {
+      try {
+        const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+        return {
+          source: bmp,
+          width: bmp.width,
+          height: bmp.height,
+          cleanup: () => bmp.close?.()
+        };
+      } catch { /* fallback para <img> */ }
+    }
+    // Fallback: <img> + object URL
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload  = () => resolve(i);
+        i.onerror = () => reject(new Error("Imagem inválida"));
+        i.src = url;
+      });
+      return {
+        source: img,
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+        cleanup: () => URL.revokeObjectURL(url)
       };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Imagem inválida")); };
-      img.src = url;
-    });
+    } catch (err) {
+      URL.revokeObjectURL(url);
+      throw err;
+    }
+  }
+
+  async function resizeImage(file, maxSide = MAX_IMG_SIDE, quality = IMG_QUALITY) {
+    const { source, width, height, cleanup } = await loadImageSource(file);
+    try {
+      const scale = Math.min(1, maxSide / Math.max(width, height));
+      const w = Math.max(1, Math.round(width  * scale));
+      const h = Math.max(1, Math.round(height * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width  = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(source, 0, 0, w, h);
+
+      return canvas.toDataURL("image/jpeg", quality);
+    } finally {
+      cleanup();
+    }
   }
 
   async function handleFile(file) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) return toast("Escolha uma imagem válida.", "error");
-    if (file.size > MAX_FILE_MB * 1024 * 1024) return toast(`Foto de até ${MAX_FILE_MB} MB.`, "error");
+    if (!file.type.startsWith("image/")) {
+      return toast("Escolha uma imagem válida.", "error");
+    }
+    if (file.size > MAX_FILE_MB * 1024 * 1024) {
+      return toast(`Foto de até ${MAX_FILE_MB} MB.`, "error");
+    }
     try {
       state.pendingPhoto = await resizeImage(file);
       $("previewImg").src = state.pendingPhoto;
       $("preview").hidden = false;
       $("savePiece").disabled = false;
-    } catch {
-      toast("Não foi possível processar a imagem.", "error");
+    } catch (err) {
+      console.warn(err);
+      toast("Não foi possível processar esta imagem.", "error");
     }
   }
 
@@ -714,26 +747,24 @@
     document.querySelectorAll("#tabs .tab").forEach(tab => {
       const active = tab.dataset.cat === state.currentCategory;
       tab.classList.toggle("active", active);
-      tab.setAttribute("aria-selected", active);
+      tab.setAttribute("aria-selected", String(active));
     });
-    // contadores por categoria
     document.querySelectorAll("[data-count]").forEach(el => {
       const cat = el.dataset.count;
-      const n = cat === "Todos"
+      el.textContent = cat === "Todos"
         ? state.clothes.length
         : state.clothes.filter(p => p.category === cat).length;
-      el.textContent = n;
     });
   }
 
-  function emptyHTML(emoji, text) {
-    return `<div class="empty"><span class="big" aria-hidden="true">${emoji}</span>${text}</div>`;
-  }
+  const emptyHTML = (emoji, text) =>
+    `<div class="empty"><span class="big" aria-hidden="true">${emoji}</span>${text}</div>`;
 
   function renderClothes() {
     const filtered = state.clothes.filter(p =>
       state.currentCategory === "Todos" || p.category === state.currentCategory
     );
+    const selectedIds = new Set(Object.values(state.selected));
 
     $("count").textContent =
       `${state.clothes.length} ${state.clothes.length === 1 ? "peça" : "peças"}`;
@@ -749,10 +780,10 @@
     }
 
     $("clothes").innerHTML = filtered.map(p => {
-      const isSelected = Object.values(state.selected).includes(p.id);
+      const isSelected = selectedIds.has(p.id);
       return `
         <div class="clothing ${isSelected ? "selected" : ""}">
-          <img src="${p.photo}" alt="${escapeHTML(p.name)}" loading="lazy">
+          <img src="${p.photo}" alt="${escapeHTML(p.name)}" loading="lazy" decoding="async">
           <div class="clothing-info">
             <h3 title="${escapeHTML(p.name)}">${escapeHTML(p.name)}</h3>
             <span class="cat">${escapeHTML(p.category)}</span>
@@ -760,7 +791,8 @@
               <button class="secondary selectPiece" data-id="${p.id}">
                 ${isSelected ? "✓ Selecionada" : "Selecionar"}
               </button>
-              <button class="delete deletePiece" data-id="${p.id}" aria-label="Excluir ${escapeHTML(p.name)}">🗑</button>
+              <button class="delete deletePiece" data-id="${p.id}"
+                      aria-label="Excluir ${escapeHTML(p.name)}">🗑</button>
             </div>
           </div>
         </div>`;
@@ -768,15 +800,21 @@
   }
 
   function renderLook() {
-    ["Camisas","bottom","Tênis","Vestidos"].forEach(slot => {
+    LOOK_SLOTS.forEach(slot => {
       const el = $("slot-" + slot);
-      const piece = state.clothes.find(c => c.id === state.selected[slot]);
+      if (!el) return;
+
+      const pieceId = state.selected[slot];
+      const piece   = pieceId ? state.clothes.find(c => c.id === pieceId) : null;
+
       if (piece) {
         el.classList.add("filled");
         el.innerHTML = `
           <img src="${piece.photo}" alt="${escapeHTML(piece.name)}">
-          <button class="remove-slot" data-remove="${slot}" aria-label="Remover ${escapeHTML(piece.name)}">×</button>`;
+          <button class="remove-slot" data-remove="${slot}"
+                  aria-label="Remover ${escapeHTML(piece.name)}">×</button>`;
       } else {
+        if (pieceId) delete state.selected[slot]; // limpa órfão
         el.classList.remove("filled");
         el.innerHTML = SLOT_EMOJI[slot];
       }
@@ -791,10 +829,13 @@
     $("savedLooks").innerHTML = state.savedLooks.map((look, i) => `
       <div class="saved-card">
         <div class="saved-images">
-          ${look.map(p => `<img src="${p.photo}" alt="${escapeHTML(p.name)}" loading="lazy">`).join("")}
+          ${look.pieces.map(p =>
+            `<img src="${p.photo}" alt="${escapeHTML(p.name)}" loading="lazy" decoding="async">`
+          ).join("")}
         </div>
         <h3>Look ${i + 1}</h3>
-        <button class="delete deleteLook" data-id="${i}" aria-label="Excluir look ${i + 1}">Excluir look</button>
+        <button class="delete deleteLook" data-id="${look.id}"
+                aria-label="Excluir look ${i + 1}">Excluir look</button>
       </div>
     `).join("");
   }
@@ -812,53 +853,57 @@
   function openForm(open) {
     const form = $("addForm");
     form.hidden = !open;
-    $("addToggle").setAttribute("aria-expanded", open);
+    $("addToggle").setAttribute("aria-expanded", String(open));
     if (open) $("pieceName").focus();
+    else      $("addToggle").focus();
   }
 
   function resetForm() {
     $("pieceName").value = "";
-    $("camera").value = "";
+    $("camera").value  = "";
     $("gallery").value = "";
     state.pendingPhoto = "";
     $("preview").hidden = true;
-    $("previewImg").src = "";
+    $("previewImg").removeAttribute("src");
     $("savePiece").disabled = true;
   }
 
   function addPiece() {
     if (!state.pendingPhoto) return;
     if (state.clothes.length >= MAX_PIECES) {
-      toast(`Limite de ${MAX_PIECES} peças atingido.`, "error");
-      return;
+      return toast(`Limite de ${MAX_PIECES} peças atingido.`, "error");
     }
 
     const category = $("category").value;
-    const name = $("pieceName").value.trim() || category;
+    const name     = $("pieceName").value.trim() || category;
+    const newPiece = { id: uid(), name, category, photo: state.pendingPhoto };
 
-    state.clothes.unshift({
-      id: uid(),
-      name,
-      category,
-      photo: state.pendingPhoto
-    });
+    const prev = state.clothes;
+    state.clothes = [newPiece, ...prev];
+
+    if (!save()) {
+      state.clothes = prev;
+      return toast("Armazenamento cheio! Remova peças para continuar.", "error");
+    }
 
     state.currentCategory = "Todos";
     resetForm();
     openForm(false);
-    save();
     renderAll();
+    vibrate();
     toast("Peça adicionada! 💗");
   }
 
   function selectPiece(id) {
     const piece = state.clothes.find(p => p.id === id);
     if (!piece) return;
+
     const slot = slotFor(piece.category);
 
     if (state.selected[slot] === id) {
       delete state.selected[slot];
     } else {
+      // Vestido e (camisa+baixo) são mutuamente exclusivos
       if (slot === "Vestidos") {
         delete state.selected.Camisas;
         delete state.selected.bottom;
@@ -869,6 +914,7 @@
       state.selected[slot] = id;
     }
 
+    vibrate();
     renderClothes();
     renderLook();
   }
@@ -878,34 +924,61 @@
     if (!piece) return;
     if (!confirm(`Excluir "${piece.name}"?`)) return;
 
-    state.clothes = state.clothes.filter(p => p.id !== id);
+    const prevClothes  = state.clothes;
+    const prevSelected = { ...state.selected };
+
+    state.clothes = prevClothes.filter(p => p.id !== id);
     Object.keys(state.selected).forEach(k => {
       if (state.selected[k] === id) delete state.selected[k];
     });
 
-    save();
+    if (!save()) {
+      state.clothes  = prevClothes;
+      state.selected = prevSelected;
+      return toast("Falha ao excluir. Tente novamente.", "error");
+    }
+
     renderAll();
     toast("Peça excluída.");
   }
 
+  let lookMsgTimer;
+  function setLookMessage(text, type = "") {
+    const el = $("lookMessage");
+    el.textContent = text;
+    el.className = "message" + (type ? " " + type : "");
+    clearTimeout(lookMsgTimer);
+    if (type === "ok") {
+      lookMsgTimer = setTimeout(() => {
+        el.className = "message";
+      }, 3000);
+    }
+  }
+
   function saveLook() {
-    const look = LOOK_ORDER
+    const look = LOOK_SLOTS
       .map(slot => state.clothes.find(p => p.id === state.selected[slot]))
       .filter(Boolean);
 
     if (look.length === 0) {
-      $("lookMessage").textContent = "Selecione pelo menos uma peça primeiro.";
-      $("lookMessage").classList.remove("ok");
-      return;
+      return setLookMessage("Selecione pelo menos uma peça primeiro.", "error");
     }
 
-    state.savedLooks.unshift(look.map(p => ({ ...p })));
-    save();
+    const prev = state.savedLooks;
+    state.savedLooks = [
+      { id: uid(), pieces: look.map(p => ({ ...p })) },
+      ...prev
+    ];
+
+    if (!save()) {
+      state.savedLooks = prev;
+      return setLookMessage("Armazenamento cheio! Não foi possível salvar.", "error");
+    }
+
     renderSavedLooks();
-    $("lookMessage").textContent = "Look salvo com sucesso! 💗";
-    $("lookMessage").classList.add("ok");
+    setLookMessage("Look salvo com sucesso! 💗", "ok");
+    vibrate();
     toast("Look salvo!");
-    setTimeout(() => $("lookMessage").classList.remove("ok"), 3000);
   }
 
   /* ============================================================
@@ -914,14 +987,16 @@
   $("addToggle").addEventListener("click", () => {
     openForm($("addForm").hidden);
   });
+
   $("closeForm").addEventListener("click", () => {
     openForm(false);
     resetForm();
   });
 
-  ["camera","gallery"].forEach(id =>
+  ["camera", "gallery"].forEach(id =>
     $(id).addEventListener("change", e => handleFile(e.target.files[0]))
   );
+
   $("changePhoto").addEventListener("click", () => $("gallery").click());
   $("savePiece").addEventListener("click", addPiece);
 
@@ -954,8 +1029,7 @@
     state.selected = {};
     renderClothes();
     renderLook();
-    $("lookMessage").textContent = "Look limpo! Escolha novas peças.";
-    $("lookMessage").classList.remove("ok");
+    setLookMessage("Look limpo! Escolha novas peças.");
   });
 
   $("saveLook").addEventListener("click", saveLook);
@@ -964,13 +1038,21 @@
     const btn = e.target.closest(".deleteLook");
     if (!btn) return;
     if (!confirm("Excluir este look?")) return;
-    state.savedLooks.splice(Number(btn.dataset.id), 1);
-    save();
+
+    const id  = btn.dataset.id;
+    const prev = state.savedLooks;
+    state.savedLooks = prev.filter(l => l.id !== id);
+
+    if (!save()) {
+      state.savedLooks = prev;
+      return toast("Falha ao excluir. Tente novamente.", "error");
+    }
+
     renderSavedLooks();
     toast("Look excluído.");
   });
 
-  // Fechar form com ESC
+  // ESC fecha o formulário
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && !$("addForm").hidden) {
       openForm(false);
